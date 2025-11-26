@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let mannequin = null;
 
   // ********* ВАЖНО: вот тут путь к модели *********
-  const MODEL_PATH = "./assets/manequin_statue.glb";
+  const MODEL_PATH = "./assets/trex.glb";
   console.log("Пробуем загрузить модель из:", MODEL_PATH);
 
   loader.load(
