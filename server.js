@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// статика
+// раздаём папку public как статику
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {

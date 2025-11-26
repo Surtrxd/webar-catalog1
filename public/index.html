@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>AR примерка</title>
+  <title>AR примерка одежды</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- importmap для three + GLTFLoader + mindar -->
+  <!-- importmap для three + GLTFLoader + mindar (как в рабочем T-Rex-проекте) -->
   <script type="importmap">
   {
     "imports": {
@@ -28,11 +28,13 @@
       color: #fff;
     }
 
+    /* контейнер под MindAR */
     #container {
       position: fixed;
       inset: 0;
     }
 
+    /* простой оверлей с подсказкой */
     #ui-overlay {
       position: fixed;
       inset: 0;
@@ -55,9 +57,27 @@
       max-width: 90%;
       text-align: center;
     }
+
+    #marker-link {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 20;
+      pointer-events: auto;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 6px 10px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
   </style>
 </head>
 <body>
+  <!-- кнопка/ссылка чтобы скачать маркер (по желанию) -->
+  <a id="marker-link" href="./assets/marker.png" download>Скачать маркер</a>
+
   <!-- контейнер для MindAR -->
   <div id="container"></div>
 

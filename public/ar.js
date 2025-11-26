@@ -12,12 +12,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("[HINT]", text);
   };
 
-  console.log("=== START AR INIT ===");
-  console.log("navigator.mediaDevices:", navigator.mediaDevices);
+  console.log("=== AR INIT START ===");
 
+  // === ИНИЦИАЛИЗАЦИЯ MINDAR ===
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/target.mind",
+    imageTargetSrc: "./assets/target.mind", // ВАЖНО: точный путь и имя файла
   });
 
   const { renderer, scene, camera } = mindarThree;
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(container.clientWidth, container.clientHeight);
 
-  // свет
+  // === СВЕТ ===
   const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.8);
   scene.add(hemi);
 
@@ -33,29 +33,35 @@ document.addEventListener("DOMContentLoaded", async () => {
   dir.position.set(0, 1, 1);
   scene.add(dir);
 
-  // якорь для таргета
+  // === ЯКОРЬ ДЛЯ ПЕРВОГО ТАРГЕТА ===
   const anchor = mindarThree.addAnchor(0);
 
-  // МОДЕЛЬ
+  // === ЗАГРУЗКА МОДЕЛИ МАНЕКЕНА / ОДЕЖДЫ ===
   const loader = new GLTFLoader();
   let mannequin = null;
 
   loader.load(
-    "./assets/mannequin.glb", // твоя модель
+    "./assets/mannequin.glb", // сюда кладёшь свою модель
     (gltf) => {
       mannequin = gltf.scene;
+
+      // тут подбираешь масштаб/позицию под свой glb
       mannequin.scale.set(0.35, 0.35, 0.35);
       mannequin.position.set(0, -0.2, 0);
+      mannequin.rotation.set(0, 0, 0);
+
       anchor.group.add(mannequin);
-      console.log("Модель загружена");
+      console.log("Манекен загружен");
+      setHint("Камера запущена. Наведи на маркер.");
     },
     undefined,
     (err) => {
-      console.error("Ошибка загрузки модели:", err);
-      setHint("Ошибка загрузки модели (см. консоль).");
+      console.error("Ошибка загрузки mannequin.glb:", err);
+      setHint("Не удалось загрузить модель (см. консоль).");
     }
   );
 
+  // события маркера (опционально, но удобно)
   anchor.onTargetFound = () => {
     console.log("TARGET FOUND");
     setHint("Маркер найден! Двигай телефон вокруг манекена.");
@@ -66,12 +72,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     setHint("Маркер потерян. Наведи камеру на маркер ещё раз.");
   };
 
-  // ЗАПУСК КАМЕРЫ
+  // === СТАРТ КАМЕРЫ И MINDAR ===
   setHint("Запрашиваем доступ к камере…");
+
   try {
     await mindarThree.start();
     console.log("MindAR запущен");
-    setHint("Камера запущена. Наведи на маркер.");
+    // если модель уже успела загрузиться — подсказка уже поменялась на текст из loader.load
+    if (!mannequin) {
+      setHint("Камера запущена. Наведи на маркер.");
+    }
   } catch (e) {
     console.error("Ошибка запуска MindAR:", e);
     if (e && e.name === "NotAllowedError") {
@@ -81,16 +91,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       setHint("Не удалось запустить камеру (см. консоль).");
     }
-    return; // дальше нет смысла крутить рендер
+    return;
   }
 
+  // === АНИМАЦИЯ ===
   renderer.setAnimationLoop(() => {
     if (mannequin) {
-      mannequin.rotation.y += 0.01;
+      mannequin.rotation.y += 0.01; // лёгкое вращение, чтобы было живо
     }
     renderer.render(scene, camera);
   });
 
+  // ресайз
   window.addEventListener("resize", () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
