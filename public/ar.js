@@ -1,6 +1,5 @@
 // ar.js
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MindARThree } from "mindar-image-three";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -13,11 +12,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   console.log("=== AR INIT START ===");
-  console.log("location:", location.href);
 
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/target.mind",
+    imageTargetSrc: "./assets/target.mind", // твой таргет
   });
 
   const { renderer, scene, camera } = mindarThree;
@@ -25,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(container.clientWidth, container.clientHeight);
 
+  // свет
   const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.8);
   scene.add(hemi);
 
@@ -32,61 +31,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   dir.position.set(0, 1, 1);
   scene.add(dir);
 
-  // const anchor = mindarThree.addAnchor(0);
-
-  // const loader = new GLTFLoader();
-  // let mannequin = null;
-
-  // // ********* ВАЖНО: вот тут путь к модели *********
-  // const MODEL_PATH = "./assets/trex.glb";
-  // console.log("Пробуем загрузить модель из:", MODEL_PATH);
-
+  // anchor для маркера #0
   const anchor = mindarThree.addAnchor(0);
 
-  // ВРЕМЕННО: тестовый куб вместо модели
-  let testCube = new THREE.Mesh(
+  // ТЕСТОВЫЙ КУБ вместо модели
+  const testCube = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.3),
     new THREE.MeshNormalMaterial()
   );
   testCube.position.set(0, 0, 0);
   anchor.group.add(testCube);
 
-  
-  // loader.load(
-  //   MODEL_PATH,
-  //   (gltf) => {
-  //     console.log("GLTFLoader: модель ЗАГРУЖЕНА успешно");
-  //     mannequin = gltf.scene;
-  //     mannequin.scale.set(0.35, 0.35, 0.35);
-  //     mannequin.position.set(0, -0.2, 0);
-  //     mannequin.rotation.set(0, 0, 0);
-
-  //     anchor.group.add(mannequin);
-  //     setHint("Камера запущена. Наведи на маркер.");
-  //   },
-  //   (xhr) => {
-  //     // прогресс
-  //     if (xhr.lengthComputable) {
-  //       const percent = (xhr.loaded / xhr.total) * 100;
-  //       console.log(`Загрузка модели: ${percent.toFixed(1)}%`);
-  //     } else {
-  //       console.log(`Загрузка модели: ${xhr.loaded} байт`);
-  //     }
-  //   },
-  //   (err) => {
-  //     console.error("Ошибка загрузки модели:", err);
-  //     // Попробуем вытащить статус, если это 404 и т.п.
-  //     if (err && err.target) {
-  //       console.log("err.target.status:", err.target.status);
-  //       console.log("err.target.responseURL:", err.target.responseURL);
-  //     }
-  //     setHint("Не удалось загрузить модель (проверь путь или имя файла).");
-  //   }
-  // );
-
+  // события маркера
   anchor.onTargetFound = () => {
     console.log("TARGET FOUND");
-    setHint("Маркер найден! Двигай телефон вокруг манекена.");
+    setHint("Маркер найден! Должен быть цветной куб.");
   };
 
   anchor.onTargetLost = () => {
@@ -94,14 +53,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     setHint("Маркер потерян. Наведи камеру на маркер ещё раз.");
   };
 
+  // старт камеры
   setHint("Запрашиваем доступ к камере…");
-
   try {
     await mindarThree.start();
     console.log("MindAR запущен");
-    if (!mannequin) {
-      setHint("Камера запущена. Ждём загрузку модели…");
-    }
+    setHint("Камера запущена. Наведи на маркер.");
   } catch (e) {
     console.error("Ошибка запуска MindAR:", e);
     if (e && e.name === "NotAllowedError") {
@@ -114,10 +71,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // рендер-цикл
   renderer.setAnimationLoop(() => {
-    if (mannequin) {
-      mannequin.rotation.y += 0.01;
-    }
+    // лёгкая анимация куба, чтобы было видно
+    testCube.rotation.y += 0.02;
     renderer.render(scene, camera);
   });
 
