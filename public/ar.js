@@ -1,12 +1,8 @@
-// ar.js
+// public/ar.js
 import * as THREE from "three";
 import { MindARThree } from "mindar-image-three";
 
 document.addEventListener("DOMContentLoaded", () => {
-  initAR();
-});
-
-function initAR() {
   const container = document.querySelector("#container");
   const hint = document.querySelector("#hint");
 
@@ -20,7 +16,8 @@ function initAR() {
 
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/target.mind", // твой таргет
+    imageTargetSrc: "./assets/target.mind", // ИМЯ ДОЛЖНО СОВПАДАТЬ С ФАЙЛОМ
+    // если файл называется targets.mind — поменяй на "./assets/targets.mind"
   });
 
   const { renderer, scene, camera } = mindarThree;
@@ -36,63 +33,46 @@ function initAR() {
   dir.position.set(0, 1, 1);
   scene.add(dir);
 
-  // anchor для маркера #0
+  // anchor для первого таргета (index 0 в .mind)
   const anchor = mindarThree.addAnchor(0);
 
-  // ТЕСТОВЫЙ КУБ, чтобы проверить маркер
-  const testCube = new THREE.Mesh(
+  // ТЕСТОВЫЙ КУБ
+  const cube = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.3),
     new THREE.MeshNormalMaterial()
   );
-  testCube.position.set(0, 0, 0);
-  anchor.group.add(testCube);
+  cube.position.set(0, 0, 0);
+  anchor.group.add(cube);
 
-  // события маркера
   anchor.onTargetFound = () => {
     console.log("TARGET FOUND");
-    setHint("Маркер найден! Должен быть цветной куб.");
+    setHint("Маркер найден! Видишь куб на нём.");
   };
 
   anchor.onTargetLost = () => {
     console.log("TARGET LOST");
-    setHint("Маркер потерян. Наведи камеру на маркер ещё раз.");
+    setHint("Маркер потерян. Наведи ещё раз.");
   };
 
-  // СТАРТ БЕЗ await
   setHint("Запрашиваем доступ к камере…");
 
-  // просто вызываем start, но интерфейс обновляем сами
   mindarThree
     .start()
     .then(() => {
-      console.log("MindAR start() resolved");
-      // на айфоне промис может и не резолвиться, но если резолвится — обновим текст
+      console.log("MindAR started");
       setHint("Камера запущена. Наведи на маркер.");
     })
     .catch((e) => {
       console.error("Ошибка запуска MindAR:", e);
-      if (e && e.name === "NotAllowedError") {
-        setHint("Нет доступа к камере. Разреши камеру в настройках браузера.");
-      } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
-        setHint("Камера требует HTTPS.");
-      } else {
-        setHint("Не удалось запустить камеру (см. консоль).");
-      }
+      setHint("Не удалось запустить камеру (см. консоль).");
     });
 
-  // И СРАЗУ СЧИТАЕМ, ЧТО КАМЕРА ЗАПУЩЕНА, ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ РАЗРЕШИЛ ДОСТУП
-  // (это обходит зависший промис на iOS)
-  setTimeout(() => {
-    setHint("Камера запущена. Наведи на маркер.");
-  }, 1000);
-
-  // рендер-цикл
   renderer.setAnimationLoop(() => {
-    testCube.rotation.y += 0.02;
+    cube.rotation.y += 0.02;
     renderer.render(scene, camera);
   });
 
   window.addEventListener("resize", () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
-}
+});
