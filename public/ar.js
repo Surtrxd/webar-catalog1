@@ -20,7 +20,7 @@ function initAR() {
 
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/target.mind", // твой таргет
+    imageTargetSrc: "./assets/targets.mind", // твой таргет
   });
 
   const { renderer, scene, camera } = mindarThree;
