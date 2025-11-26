@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>AR-каталог одежды</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>AR-каталог одежды</h1>
+
+    <section id="catalog">
+      <div class="item" data-id="dress1">
+        <h2>Платье 1</h2>
+        <button class="try-on-btn">Примерить</button>
+      </div>
+
+      <div class="item" data-id="dress2">
+        <h2>Платье 2</h2>
+        <button class="try-on-btn">Примерить</button>
+      </div>
+
+      <!-- добавишь остальные образы -->
+    </section>
+
+    <section>
+      <h3>Как пользоваться</h3>
+      <ol>
+        <li>Скачай и распечатай маркер.</li>
+        <li>Выбери образ и нажми «Примерить».</li>
+        <li>Наведи камеру телефона на маркер.</li>
+      </ol>
+      <a href="mindar/targets.png" download>Скачать маркер</a>
+    </section>
+  </main>
+
+  <script type="module" src="js/catalog.js"></script>
+</body>
+</html>
