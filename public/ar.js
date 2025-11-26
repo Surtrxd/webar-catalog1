@@ -41,25 +41,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   let mannequin = null;
 
   loader.load(
-    "./assets/mannequin.glb", // сюда кладёшь свою модель
-    (gltf) => {
-      mannequin = gltf.scene;
+  "./assets/mannequin.glb",
+  (gltf) => {
+    mannequin = gltf.scene;
+    mannequin.scale.set(0.35, 0.35, 0.35);
+    mannequin.position.set(0, -0.2, 0);
+    mannequin.rotation.set(0, 0, 0);
 
-      // тут подбираешь масштаб/позицию под свой glb
-      mannequin.scale.set(0.35, 0.35, 0.35);
-      mannequin.position.set(0, -0.2, 0);
-      mannequin.rotation.set(0, 0, 0);
+    anchor.group.add(mannequin);
+    console.log("Манекен загружен");
+    setHint("Камера запущена. Наведи на маркер.");
+  },
+  undefined,
+  (err) => {
+    console.error("Ошибка загрузки mannequin.glb:", err);
+    setHint("Не удалось загрузить модель (проверь путь и имя файла).");
+  }
+);
 
-      anchor.group.add(mannequin);
-      console.log("Манекен загружен");
-      setHint("Камера запущена. Наведи на маркер.");
-    },
-    undefined,
-    (err) => {
-      console.error("Ошибка загрузки mannequin.glb:", err);
-      setHint("Не удалось загрузить модель (см. консоль).");
-    }
-  );
 
   // события маркера (опционально, но удобно)
   anchor.onTargetFound = () => {
