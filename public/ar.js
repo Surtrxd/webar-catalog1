@@ -2,7 +2,11 @@
 import * as THREE from "three";
 import { MindARThree } from "mindar-image-three";
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
+  initAR();
+});
+
+function initAR() {
   const container = document.querySelector("#container");
   const hint = document.querySelector("#hint");
 
@@ -35,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // anchor для маркера #0
   const anchor = mindarThree.addAnchor(0);
 
-  // ТЕСТОВЫЙ КУБ, чтобы вообще не зависеть от glb
+  // ТЕСТОВЫЙ КУБ, чтобы проверить маркер
   const testCube = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.3),
     new THREE.MeshNormalMaterial()
@@ -54,23 +58,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     setHint("Маркер потерян. Наведи камеру на маркер ещё раз.");
   };
 
-  // старт камеры
+  // СТАРТ БЕЗ await
   setHint("Запрашиваем доступ к камере…");
-  try {
-    await mindarThree.start();
-    console.log("MindAR запущен");
+
+  // просто вызываем start, но интерфейс обновляем сами
+  mindarThree
+    .start()
+    .then(() => {
+      console.log("MindAR start() resolved");
+      // на айфоне промис может и не резолвиться, но если резолвится — обновим текст
+      setHint("Камера запущена. Наведи на маркер.");
+    })
+    .catch((e) => {
+      console.error("Ошибка запуска MindAR:", e);
+      if (e && e.name === "NotAllowedError") {
+        setHint("Нет доступа к камере. Разреши камеру в настройках браузера.");
+      } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
+        setHint("Камера требует HTTPS.");
+      } else {
+        setHint("Не удалось запустить камеру (см. консоль).");
+      }
+    });
+
+  // И СРАЗУ СЧИТАЕМ, ЧТО КАМЕРА ЗАПУЩЕНА, ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ РАЗРЕШИЛ ДОСТУП
+  // (это обходит зависший промис на iOS)
+  setTimeout(() => {
     setHint("Камера запущена. Наведи на маркер.");
-  } catch (e) {
-    console.error("Ошибка запуска MindAR:", e);
-    if (e && e.name === "NotAllowedError") {
-      setHint("Нет доступа к камере. Разреши камеру в настройках браузера.");
-    } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
-      setHint("Камера требует HTTPS.");
-    } else {
-      setHint("Не удалось запустить камеру (см. консоль).");
-    }
-    return;
-  }
+  }, 1000);
 
   // рендер-цикл
   renderer.setAnimationLoop(() => {
@@ -81,4 +95,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("resize", () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
-});
+}
