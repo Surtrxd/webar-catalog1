@@ -1,7 +1,8 @@
 {
-  "name": "ar-clothes-catalog",
+  "name": "ar-clothes-simple",
   "version": "1.0.0",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "start": "node server.js"
   },
