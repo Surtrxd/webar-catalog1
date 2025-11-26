@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let mannequin = null;
 
   loader.load(
-  "./assets/mannequin.glb",
+  "./assets/mannequin_statue.glb",
   (gltf) => {
     mannequin = gltf.scene;
     mannequin.scale.set(0.35, 0.35, 0.35);
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   },
   undefined,
   (err) => {
-    console.error("Ошибка загрузки mannequin.glb:", err);
+    console.error("Ошибка загрузки mannequin_statue.glb:", err);
     setHint("Не удалось загрузить модель (проверь путь и имя файла).");
   }
 );
