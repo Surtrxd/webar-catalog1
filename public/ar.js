@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   console.log("=== AR INIT START ===");
+  console.log("location:", location.href);
 
   const mindarThree = new MindARThree({
     container,
@@ -34,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // anchor для маркера #0
   const anchor = mindarThree.addAnchor(0);
 
-  // ТЕСТОВЫЙ КУБ вместо модели
+  // ТЕСТОВЫЙ КУБ, чтобы вообще не зависеть от glb
   const testCube = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, 0.3),
     new THREE.MeshNormalMaterial()
@@ -73,7 +74,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // рендер-цикл
   renderer.setAnimationLoop(() => {
-    // лёгкая анимация куба, чтобы было видно
     testCube.rotation.y += 0.02;
     renderer.render(scene, camera);
   });
