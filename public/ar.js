@@ -13,11 +13,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   console.log("=== AR INIT START ===");
+  console.log("location:", location.href);
 
-  // === ИНИЦИАЛИЗАЦИЯ MINDAR ===
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/target.mind", // ВАЖНО: точный путь и имя файла
+    imageTargetSrc: "./assets/target.mind",
   });
 
   const { renderer, scene, camera } = mindarThree;
@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(container.clientWidth, container.clientHeight);
 
-  // === СВЕТ ===
   const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.8);
   scene.add(hemi);
 
@@ -33,34 +32,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   dir.position.set(0, 1, 1);
   scene.add(dir);
 
-  // === ЯКОРЬ ДЛЯ ПЕРВОГО ТАРГЕТА ===
   const anchor = mindarThree.addAnchor(0);
 
-  // === ЗАГРУЗКА МОДЕЛИ МАНЕКЕНА / ОДЕЖДЫ ===
   const loader = new GLTFLoader();
   let mannequin = null;
 
+  // ********* ВАЖНО: вот тут путь к модели *********
+  const MODEL_PATH = "./assets/manequin_statue.glb";
+  console.log("Пробуем загрузить модель из:", MODEL_PATH);
+
   loader.load(
-  "./assets/mannequin_statue.glb",
-  (gltf) => {
-    mannequin = gltf.scene;
-    mannequin.scale.set(0.35, 0.35, 0.35);
-    mannequin.position.set(0, -0.2, 0);
-    mannequin.rotation.set(0, 0, 0);
+    MODEL_PATH,
+    (gltf) => {
+      console.log("GLTFLoader: модель ЗАГРУЖЕНА успешно");
+      mannequin = gltf.scene;
+      mannequin.scale.set(0.35, 0.35, 0.35);
+      mannequin.position.set(0, -0.2, 0);
+      mannequin.rotation.set(0, 0, 0);
 
-    anchor.group.add(mannequin);
-    console.log("Манекен загружен");
-    setHint("Камера запущена. Наведи на маркер.");
-  },
-  undefined,
-  (err) => {
-    console.error("Ошибка загрузки mannequin_statue.glb:", err);
-    setHint("Не удалось загрузить модель (проверь путь и имя файла).");
-  }
-);
+      anchor.group.add(mannequin);
+      setHint("Камера запущена. Наведи на маркер.");
+    },
+    (xhr) => {
+      // прогресс
+      if (xhr.lengthComputable) {
+        const percent = (xhr.loaded / xhr.total) * 100;
+        console.log(`Загрузка модели: ${percent.toFixed(1)}%`);
+      } else {
+        console.log(`Загрузка модели: ${xhr.loaded} байт`);
+      }
+    },
+    (err) => {
+      console.error("Ошибка загрузки модели:", err);
+      // Попробуем вытащить статус, если это 404 и т.п.
+      if (err && err.target) {
+        console.log("err.target.status:", err.target.status);
+        console.log("err.target.responseURL:", err.target.responseURL);
+      }
+      setHint("Не удалось загрузить модель (проверь путь или имя файла).");
+    }
+  );
 
-
-  // события маркера (опционально, но удобно)
   anchor.onTargetFound = () => {
     console.log("TARGET FOUND");
     setHint("Маркер найден! Двигай телефон вокруг манекена.");
@@ -71,37 +83,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     setHint("Маркер потерян. Наведи камеру на маркер ещё раз.");
   };
 
-  // === СТАРТ КАМЕРЫ И MINDAR ===
   setHint("Запрашиваем доступ к камере…");
 
   try {
     await mindarThree.start();
     console.log("MindAR запущен");
-    // если модель уже успела загрузиться — подсказка уже поменялась на текст из loader.load
     if (!mannequin) {
-      setHint("Камера запущена. Наведи на маркер.");
+      setHint("Камера запущена. Ждём загрузку модели…");
     }
   } catch (e) {
     console.error("Ошибка запуска MindAR:", e);
     if (e && e.name === "NotAllowedError") {
       setHint("Нет доступа к камере. Разреши камеру в настройках браузера.");
     } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
-      setHint("Камера требует HTTPS. Открой сайт по https или через Render.");
+      setHint("Камера требует HTTPS.");
     } else {
       setHint("Не удалось запустить камеру (см. консоль).");
     }
     return;
   }
 
-  // === АНИМАЦИЯ ===
   renderer.setAnimationLoop(() => {
     if (mannequin) {
-      mannequin.rotation.y += 0.01; // лёгкое вращение, чтобы было живо
+      mannequin.rotation.y += 0.01;
     }
     renderer.render(scene, camera);
   });
 
-  // ресайз
   window.addEventListener("resize", () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
