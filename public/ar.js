@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let mannequin = null;
 
   loader.load(
-    "./assets/mannequin_statue.glb",
+    "./assets/manequin_statue.glb",
     (gltf) => {
       console.log("Модель манекена загружена");
       mannequin = gltf.scene;
