@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       rotation: [0, 0, 0],
     },
     casual: {
-      file: "./assets/basketball_jacket.glb",
+      file: "./assets/suit_blazer_dian_bespoke_2022.glb",
       scale: [0.35, 0.35, 0.35],
       position: [0, -0.2, 0],
       rotation: [0, 0, 0],
