@@ -6,6 +6,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.querySelector("#container");
   const hint = document.querySelector("#hint");
+  const menu = document.querySelector("#outfit-menu");
+  const buttonsContainer = document.querySelector("#outfit-buttons");
 
   const setHint = (text) => {
     if (hint) hint.textContent = text;
@@ -15,10 +17,44 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("=== AR INIT START ===");
   console.log("location:", location.href);
 
+  // === КОНФИГ ОБРАЗОВ ===
+  // Здесь подставишь свои реальные пути/скейлы под модели
+  const OUTFITS = {
+    base: {
+      file: "./assets/manequin_statue.glb",
+      scale: [0.35, 0.35, 0.35],
+      position: [0, -0.2, 0],
+      rotation: [0, 0, 0],
+    },
+    casual: {
+      file: "./assets/basketball_jacket.glb",
+      scale: [0.35, 0.35, 0.35],
+      position: [0, -0.2, 0],
+      rotation: [0, 0, 0],
+    },
+    formal: {
+      file: "./assets/suit.glb",
+      scale: [0.35, 0.35, 0.35],
+      position: [0, -0.2, 0],
+      rotation: [0, 0, 0],
+    },
+    dress: {
+      file: "./assets/dress_of_a_poor_woman_-_victorian_era.glb",
+      scale: [0.35, 0.35, 0.35],
+      position: [0, -0.2, 0],
+      rotation: [0, 0, 0],
+    },
+  };
+
+  // текущее состояние
+  const loader = new GLTFLoader();
+  const outfitModels = {}; // {id: THREE.Object3D}
+  let currentOutfitId = "base";
+
+  // === ИНИЦИАЛИЗАЦИЯ MINDAR ===
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/targets.mind", // ИМЯ ДОЛЖНО СОВПАДАТЬ С ФАЙЛОМ
-    // если файл называется targets.mind — поменяй на "./assets/targets.mind"
+    imageTargetSrc: "./assets/targets.mind", // у тебя именно так
   });
 
   const { renderer, scene, camera } = mindarThree;
@@ -34,28 +70,91 @@ document.addEventListener("DOMContentLoaded", () => {
   dir.position.set(0, 1, 1);
   scene.add(dir);
 
-  // anchor для первого таргета (index 0 в .mind)
+  // anchor для первого таргета
   const anchor = mindarThree.addAnchor(0);
-  const loader = new GLTFLoader();
-  let mannequin = null;
 
-  loader.load(
-    "./assets/manequin_statue.glb",
-    (gltf) => {
-      console.log("Модель манекена загружена");
-      mannequin = gltf.scene;
-      mannequin.scale.set(0.35, 0.35, 0.35);
-      mannequin.position.set(0, -0.2, 0);
-      anchor.group.add(mannequin);
-    },
-    undefined,
-    (err) => {
-      console.error("Ошибка загрузки mannequin.glb:", err);
-      setHint("Не удалось загрузить модель (см. консоль).");
+  // === ФУНКЦИИ ДЛЯ ОДЕЖДЫ ===
+
+  const setActiveOutfit = (id) => {
+    currentOutfitId = id;
+    Object.entries(outfitModels).forEach(([key, model]) => {
+      model.visible = key === id;
+    });
+
+    // подсветка кнопок
+    if (buttonsContainer) {
+      buttonsContainer.querySelectorAll(".outfit-btn").forEach((btn) => {
+        if (btn.dataset.outfit === id) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
     }
-  );
 
+    console.log("Текущий образ:", id);
+  };
 
+  const loadOutfitIfNeeded = (id) => {
+    if (outfitModels[id]) {
+      // уже загружен, просто переключаемся
+      setActiveOutfit(id);
+      return;
+    }
+
+    const config = OUTFITS[id];
+    if (!config) {
+      console.warn("Нет конфига для образа", id);
+      return;
+    }
+
+    console.log("Загружаем образ", id, "из", config.file);
+    loader.load(
+      config.file,
+      (gltf) => {
+        const model = gltf.scene;
+        model.scale.set(...config.scale);
+        model.position.set(...config.position);
+        model.rotation.set(...config.rotation);
+
+        model.visible = false; // временно, включим в setActiveOutfit
+        anchor.group.add(model);
+        outfitModels[id] = model;
+
+        setActiveOutfit(id);
+      },
+      undefined,
+      (err) => {
+        console.error("Ошибка загрузки образа", id, err);
+        setHint("Не удалось загрузить модель образа (см. консоль).");
+      }
+    );
+  };
+
+  // === СОБЫТИЯ МАРКЕРА ===
+  anchor.onTargetFound = () => {
+    console.log("TARGET FOUND");
+    setHint("Маркер найден! Выбери образ в меню.");
+    if (menu) menu.style.display = "block";
+  };
+
+  anchor.onTargetLost = () => {
+    console.log("TARGET LOST");
+    setHint("Маркер потерян. Наведи камеру на маркер ещё раз.");
+    if (menu) menu.style.display = "none";
+  };
+
+  // === ОБРАБОТЧИКИ КНОПОК МЕНЮ ===
+  if (buttonsContainer) {
+    buttonsContainer.querySelectorAll(".outfit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.outfit;
+        loadOutfitIfNeeded(id);
+      });
+    });
+  }
+
+  // === СТАРТ КАМЕРЫ ===
   setHint("Запрашиваем доступ к камере…");
 
   mindarThree
@@ -63,19 +162,22 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(() => {
       console.log("MindAR started");
       setHint("Камера запущена. Наведи на маркер.");
+      // заранее грузим базовый образ
+      loadOutfitIfNeeded("base");
     })
     .catch((e) => {
       console.error("Ошибка запуска MindAR:", e);
       setHint("Не удалось запустить камеру (см. консоль).");
     });
 
+  // === РЕНДЕР ===
   renderer.setAnimationLoop(() => {
-  if (mannequin) {
-    mannequin.rotation.y += 0.01;
-  }
-  renderer.render(scene, camera);
-});
-
+    const activeModel = outfitModels[currentOutfitId];
+    if (activeModel) {
+      activeModel.rotation.y += 0.01;
+    }
+    renderer.render(scene, camera);
+  });
 
   window.addEventListener("resize", () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
