@@ -1,6 +1,7 @@
 // public/ar.js
 import * as THREE from "three";
 import { MindARThree } from "mindar-image-three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.querySelector("#container");
@@ -16,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mindarThree = new MindARThree({
     container,
-    imageTargetSrc: "./assets/target.mind", // ИМЯ ДОЛЖНО СОВПАДАТЬ С ФАЙЛОМ
+    imageTargetSrc: "./assets/targets.mind", // ИМЯ ДОЛЖНО СОВПАДАТЬ С ФАЙЛОМ
     // если файл называется targets.mind — поменяй на "./assets/targets.mind"
   });
 
@@ -35,24 +36,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // anchor для первого таргета (index 0 в .mind)
   const anchor = mindarThree.addAnchor(0);
+  const loader = new GLTFLoader();
+  let mannequin = null;
 
-  // ТЕСТОВЫЙ КУБ
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.3, 0.3),
-    new THREE.MeshNormalMaterial()
+  loader.load(
+    "./assets/mannequin_statue.glb",
+    (gltf) => {
+      console.log("Модель манекена загружена");
+      mannequin = gltf.scene;
+      mannequin.scale.set(0.35, 0.35, 0.35);
+      mannequin.position.set(0, -0.2, 0);
+      anchor.group.add(mannequin);
+    },
+    undefined,
+    (err) => {
+      console.error("Ошибка загрузки mannequin.glb:", err);
+      setHint("Не удалось загрузить модель (см. консоль).");
+    }
   );
-  cube.position.set(0, 0, 0);
-  anchor.group.add(cube);
 
-  anchor.onTargetFound = () => {
-    console.log("TARGET FOUND");
-    setHint("Маркер найден! Видишь куб на нём.");
-  };
-
-  anchor.onTargetLost = () => {
-    console.log("TARGET LOST");
-    setHint("Маркер потерян. Наведи ещё раз.");
-  };
 
   setHint("Запрашиваем доступ к камере…");
 
@@ -68,9 +70,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   renderer.setAnimationLoop(() => {
-    cube.rotation.y += 0.02;
-    renderer.render(scene, camera);
-  });
+  if (mannequin) {
+    mannequin.rotation.y += 0.01;
+  }
+  renderer.render(scene, camera);
+});
+
 
   window.addEventListener("resize", () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
